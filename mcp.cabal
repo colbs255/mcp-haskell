@@ -17,10 +17,10 @@ executable mcp
     other-modules:
     build-depends:
         base ^>=4.20.2.0,
-        array,
+        aeson,
+        text,
+        bytestring,
         containers,
-        megaparsec,
-        mtl,
     ghc-options:
         -Wall
         -Wmissing-export-lists
