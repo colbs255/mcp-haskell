@@ -15,6 +15,11 @@ executable mcp
     import:           warnings
     main-is:          Main.hs
     other-modules:
+    other-extensions:
+        OverloadedStrings
+        DeriveGeneric
+        DuplicateRecordFields
+        OverloadedRecordDot
     build-depends:
         base ^>=4.20.2.0,
         aeson,
