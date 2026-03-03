@@ -1,0 +1,34 @@
+cabal-version:      3.14
+name:               mcp
+version:            0.1.0.0
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             colbs255
+maintainer:         colbs255@users.noreply.github.com
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall
+
+executable mcp
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:
+    build-depends:
+        base ^>=4.20.2.0,
+        array,
+        containers,
+        megaparsec,
+        mtl,
+    ghc-options:
+        -Wall
+        -Wmissing-export-lists
+        -Wmissing-home-modules
+        -Widentities
+        -Wredundant-constraints
+        -Wcpp-undef
+        -Wpartial-fields
+        -Wunused-packages
+    hs-source-dirs:   app
+    default-language: GHC2024
