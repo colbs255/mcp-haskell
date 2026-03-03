@@ -3,13 +3,12 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
-module Main where
+module Main (main) where
 
 import GHC.Generics
 import Data.Aeson
-import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as BLS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.Text as T
 import System.IO
@@ -60,9 +59,9 @@ toolListResponse = object
 
 handleToolCall :: Value -> IO Value
 handleToolCall (Object o) =
-  case (lookup "name" o, lookup "arguments" o) of
+  case (KM.lookup "name" o, KM.lookup "arguments" o) of
     (Just (String "add_numbers"), Just (Object args)) ->
-      case (lookup "a" args, lookup "b" args) of
+      case (KM.lookup "a" args, KM.lookup "b" args) of
         (Just (Number a), Just (Number b)) ->
           let sumResult = a + b
           in pure $ object
