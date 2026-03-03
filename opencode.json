@@ -5,5 +5,12 @@
       "command": ["haskell-language-server-wrapper", "--lsp"],
       "extensions": [".hs"]
     }
-  }
+  },
+  "mcp": {
+    "my-local-mcp-server": {
+      "type": "local",
+      "command": ["dist-newstyle/build/x86_64-linux/ghc-9.10.3/mcp-0.1.0.0/x/mcp/build/mcp/mcp"],
+      "enabled": true,
+    },
+  },
 }
