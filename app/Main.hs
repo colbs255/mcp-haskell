@@ -1,17 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
 module Main (main) where
 
-import GHC.Generics
 import Data.Aeson
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.Text as T
-import System.IO (hSetBuffering, stdout, BufferMode(LineBuffering), appendFile)
+import System.IO (hSetBuffering, stdout, BufferMode(LineBuffering))
 import Control.Monad (forever)
 
 -- JSON-RPC Request ----------------------------
@@ -20,20 +18,30 @@ data RpcRequest = RpcRequest
   { jsonrpc :: T.Text
   , method  :: T.Text
   , params  :: Maybe Value
-  , rpcId      :: Maybe Value
-  } deriving (Show, Generic)
+  , rpcId   :: Maybe Value
+  } deriving (Show)
 
-instance FromJSON RpcRequest
+instance FromJSON RpcRequest where
+  parseJSON = withObject "RpcRequest" $ \o ->
+    RpcRequest
+      <$> o .: "jsonrpc"
+      <*> o .: "method"
+      <*> o .:? "params"
+      <*> o .:? "id"
 
 -- JSON-RPC Response ----------------------------
 
 data RpcResponse = RpcResponse
   { jsonrpc :: T.Text
   , result  :: Value
-  , rpcId      :: Maybe Value
-  } deriving (Show, Generic)
+  , rpcId   :: Maybe Value
+  } deriving (Show)
 
-instance ToJSON RpcResponse
+instance ToJSON RpcResponse where
+  toJSON r = object $
+    [ "jsonrpc" .= (r.jsonrpc)
+    , "result"  .= (r.result)
+    ] <> maybe [] (\i -> ["id" .= i]) (r.rpcId)
 
 -- Tool Description ----------------------------
 
@@ -87,26 +95,48 @@ errorResponse msg =
         ]
     ]
 
+-- Initialize Response ----------------------------
+
+initializeResponse :: Value
+initializeResponse = object
+  [ "protocolVersion" .= ("2025-03-26" :: T.Text)
+  , "capabilities" .= object
+      [ "tools" .= object
+          [ "listChanged" .= False
+          ]
+      ]
+  , "serverInfo" .= object
+      [ "name" .= ("mcp-haskell" :: T.Text)
+      , "version" .= ("0.1.0" :: T.Text)
+      ]
+  ]
+
 -- Dispatcher ----------------------------
 
-handleRequest :: RpcRequest -> IO RpcResponse
+handleRequest :: RpcRequest -> IO (Maybe RpcResponse)
 handleRequest req =
   case method req of
+    "initialize" ->
+      pure $ Just $ RpcResponse "2.0" initializeResponse (req.rpcId)
+
+    "notifications/initialized" ->
+      pure Nothing
+
     "tools/list" ->
-      pure $ RpcResponse "2.0" toolListResponse (req.rpcId)
+      pure $ Just $ RpcResponse "2.0" toolListResponse (req.rpcId)
 
     "tools/call" ->
       case params req of
         Just p -> do
           resultVal <- handleToolCall p
-          pure $ RpcResponse "2.0" resultVal (req.rpcId)
+          pure $ Just $ RpcResponse "2.0" resultVal (req.rpcId)
         Nothing ->
-          pure $ RpcResponse "2.0"
+          pure $ Just $ RpcResponse "2.0"
             (object ["error" .= ("Missing params" :: T.Text)])
             (req.rpcId)
 
     _ ->
-      pure $ RpcResponse "2.0"
+      pure $ Just $ RpcResponse "2.0"
         (object ["error" .= ("Unknown method" :: T.Text)])
         (req.rpcId)
 
@@ -125,5 +155,7 @@ main = do
           (object ["error" .= T.pack err])
           Nothing
       Right req -> do
-        resp <- handleRequest req
-        BL.putStrLn $ encode resp
+        mResp <- handleRequest req
+        case mResp of
+          Just resp -> BL.putStrLn $ encode resp
+          Nothing   -> pure ()
