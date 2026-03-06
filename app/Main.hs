@@ -11,7 +11,7 @@ import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.Text as T
-import System.IO
+import System.IO (hSetBuffering, stdout, BufferMode(LineBuffering), appendFile)
 import Control.Monad (forever)
 
 -- JSON-RPC Request ----------------------------
@@ -115,8 +115,10 @@ handleRequest req =
 main :: IO ()
 main = do
   hSetBuffering stdout LineBuffering
+  let inputLog = "input_log.txt"
   forever $ do
     line <- BS.getLine
+    appendFile inputLog (BS.unpack line <> "\n")
     case eitherDecode (BL.fromStrict line) of
       Left err -> BL.putStrLn $ encode $
         RpcResponse "2.0"
