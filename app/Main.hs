@@ -60,6 +60,18 @@ toolListResponse = object
               , "required" .= ["a", "b" :: T.Text]
               ]
           ]
+      , object
+          [ "name" .= ("subtract_numbers" :: T.Text)
+          , "description" .= ("Subtract two numbers" :: T.Text)
+          , "inputSchema" .= object
+              [ "type" .= ("object" :: T.Text)
+              , "properties" .= object
+                  [ "a" .= object ["type" .= ("number" :: T.Text)]
+                  , "b" .= object ["type" .= ("number" :: T.Text)]
+                  ]
+              , "required" .= ["a", "b" :: T.Text]
+              ]
+          ]
       ]
   ]
 
@@ -77,6 +89,19 @@ handleToolCall (Object o) =
                   [ object
                       [ "type" .= ("text" :: T.Text)
                       , "text" .= T.pack (show sumResult)
+                      ]
+                  ]
+              ]
+        _ -> errorResponse "Invalid arguments"
+    (Just (String "subtract_numbers"), Just (Object args)) ->
+      case (KM.lookup "a" args, KM.lookup "b" args) of
+        (Just (Number a), Just (Number b)) ->
+          let diffResult = a - b
+          in pure $ object
+              [ "content" .=
+                  [ object
+                      [ "type" .= ("text" :: T.Text)
+                      , "text" .= T.pack (show diffResult)
                       ]
                   ]
               ]
