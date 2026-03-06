@@ -15,6 +15,9 @@ executable mcp
     import:           warnings
     main-is:          Main.hs
     other-modules:
+        Rpc
+        Tools
+        Server
     other-extensions:
         OverloadedStrings
         DeriveGeneric
@@ -25,7 +28,6 @@ executable mcp
         aeson,
         text,
         bytestring,
-        containers,
     ghc-options:
         -Wall
         -Wmissing-export-lists
